@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chatbot</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f4f4f4;
+        }
+        .chat-container {
+            max-width: 600px;
+            margin: 20px auto;
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 5px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+        .chat-header {
+            font-size: 24px;
+            color: #007bff;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        #chat-window {
+            min-height: 200px;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            overflow-y: scroll;
+        }
+        .message {
+            display: flex;
+            align-items: center;
+            margin-bottom: 10px;
+            padding: 10px;
+            border-radius: 5px;
+        }
+        .message.user {
+            justify-content: flex-end;
+            background-color: #f0f0f0;
+            text-align: right;
+        }
+        .message.bot {
+            justify-content: flex-start;
+            background-color: #007bff;
+            color: white;
+        }
+        .message img {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            margin: 0 10px;
+        }
+        .message .text {
+            max-width: 70%;
+        }
+        #user-input {
+            width: calc(100% - 80px);
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            margin-top: 10px;
+        }
+        #send-btn {
+            width: 60px;
+            padding: 10px;
+            border: none;
+            background-color: #007bff;
+            color: #fff;
+            border-radius: 5px;
+            margin-top: 10px;
+            cursor: pointer;
+        }
+        #send-btn:hover {
+            background-color: #0056b3;
+        }
+    </style>
+</head>
+<body>
+    <div class="chat-container">
+        <div class="chat-header">Chatbot</div>
+        <div id="chat-window"></div>
+        <input type="text" id="user-input" placeholder="Type your question...">
+        <button id="send-btn">Send</button>
+    </div>
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            const chatWindow = document.getElementById("chat-window");
+            const userInput = document.getElementById("user-input");
+            const sendBtn = document.getElementById("send-btn");
+
+            function appendMessage(role, message) {
+                const messageElement = document.createElement("div");
+                messageElement.classList.add("message", role);
+                
+                const img = document.createElement("img");
+                img.src = role === "user" ? "https://w7.pngwing.com/pngs/831/88/png-transparent-user-profile-computer-icons-user-interface-mystique-miscellaneous-user-interface-design-smile-thumbnail.png" : "https://www.shutterstock.com/image-vector/chat-bot-logo-design-concept-600nw-1938811039.jpg";
+                
+                const text = document.createElement("div");
+                text.classList.add("text");
+                text.textContent = message;
+
+                if (role === "user") {
+                    messageElement.appendChild(text);
+                    messageElement.appendChild(img);
+                } else {
+                    messageElement.appendChild(img);
+                    messageElement.appendChild(text);
+                }
+
+                chatWindow.appendChild(messageElement);
+                chatWindow.scrollTop = chatWindow.scrollHeight;
+            }
+
+            function sendQuestion(question) {
+                fetch("/ask", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify({ question })
+                })
+                    .then(response => response.json())
+                    .then(data => {
+                        appendMessage("bot", data.response);
+                    })
+                    .catch(error => {
+                        console.error("Error:", error);
+                    });
+            }
+
+            function handleSend() {
+                const question = userInput.value.trim();
+                if (question !== "") {
+                    appendMessage("user", question);
+                    userInput.value = "";
+                    sendQuestion(question);
+                }
+            }
+
+            sendBtn.addEventListener("click", handleSend);
+
+            userInput.addEventListener("keypress", function (e) {
+                if (e.key === "Enter") {
+                    handleSend();
+                }
+            });
+        });
+    </script>
+</body>
+</html>
